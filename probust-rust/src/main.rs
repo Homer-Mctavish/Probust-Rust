@@ -1,4 +1,10 @@
 mod probust_constraint;
+mod constraint_optimizer;
+mod probust_constraint;
+mod adaptive_solver;
+
+use adaptive_solver::adaptive_optimize;
+
 
 use nalgebra::DMatrix;
 use probust_constraint::{
@@ -75,6 +81,23 @@ fn main() {
     println!("At time t = {:.2}, the reservoir level is {:.2}", t, level);
 
     // Evaluate the objective function f(c) (here, total release).
-    let obj = objective(&decision);
-    println!("Objective value (total release): {:.4}", obj);
+let candidate_t: Vec<f64> = (1..10)
+    .map(|i| i as f64 * T / 10.0)
+    .filter(|t| !grid.contains(t))
+    .collect();
+
+let (probust, optimized_decision) = adaptive_optimize(
+    probust_constraint,
+    decision,
+    &candidate_t,
+    10.0, // x̄
+    40.0, // B(T)
+    10,   // max outer iterations
+    100,  // max inner iterations for decision refinement
+);
+
+println!("\nFinal grid: {:?}", probust.grid);
+println!("Final decision vector: {:?}", optimized_decision.release);
+
+
 }
